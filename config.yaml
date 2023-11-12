@@ -1,0 +1,16 @@
+steps:
+  - name: "curl"
+    template: "curl"
+    option:
+      url: "example.com"
+      method: "GET"
+      body: "some body"
+      header:
+        - "Content-Type: application/json"
+      cookie: "my_cookie"
+  - name: "html"
+    template: "html"
+    option:
+      url: "example.com"
+      snapshot: "snapshot.png"
+      coreWebVital: "some vital info"
