@@ -2,15 +2,25 @@ steps:
   - name: "curl"
     template: "curl"
     option:
-      url: "example.com"
+      url: "https://www.yahoo.co.jp/"
       method: "GET"
-      body: "some body"
-      header:
-        - "Content-Type: application/json"
-      cookie: "my_cookie"
-  - name: "html"
-    template: "html"
+      expect:
+        status: 200
+        body: '{"sample": "aaa"}'
+  - name: "curl"
+    template: "curl"
     option:
-      url: "example.com"
-      snapshot: "snapshot.png"
-      coreWebVital: "some vital info"
+      url: "https://www.yahoo.co.jp/"
+      method: "GET"
+      expect:
+        equal: "https://www.yahoo.co.jp/"
+        status: 200
+        body: "@file=./sample.yaml"
+#  - name: "html"
+#    template: "html"
+#    option:
+#      url: "https://www.yahoo.co.jp/"
+      #screenshot:
+      #  waitSec: 1
+#      coreWebVital:
+#        waitSec: 1

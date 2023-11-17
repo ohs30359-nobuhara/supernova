@@ -3,36 +3,47 @@ package main
 import (
 	"errors"
 	"github.com/mitchellh/mapstructure"
+	"go.uber.org/zap"
+	"os"
 	"supernova/pkg"
 	"supernova/template"
 )
 
 type TemplateRunner interface {
-	Run()
+	Run() error
 }
 
 func ExecJob(step pkg.Step, target TemplateRunner) error {
 	if e := mapstructure.Decode(step.Option, target); e != nil {
 		return errors.New("template decode error:" + e.Error())
 	}
-	target.Run()
-	return nil
+	return target.Run()
 }
 
 func main() {
+	logger := pkg.GetLogger()
 	cnf, e := pkg.NewConfig("./config.yaml")
 	if e != nil {
+		logger.Error("pipelineの書式が間違っています", zap.Error(e))
 		panic(e)
 	}
 
 	for _, step := range cnf.Steps {
+		var templateError error
 		switch step.Template {
 		case "curl":
 			var t template.CurlTemplate
-			ExecJob(step, &t)
+			templateError = ExecJob(step, &t)
 		case "html":
 			var t template.HtmlTemplate
-			ExecJob(step, &t)
+			templateError = ExecJob(step, &t)
+		}
+
+		if templateError != nil {
+			logger.Error("step失敗", zap.String("name", step.Name), zap.Error(templateError))
+			os.Exit(1)
+		} else {
+			logger.Info("成功", zap.String("name", step.Name))
 		}
 	}
 }
