@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -16,80 +17,123 @@ type CurlTemplate struct {
 	Cookie string   `yaml:"cookie"`
 	Expect struct {
 		Status *int    `yaml:"status"`
-		Body   *string `yaml:"body"`
-		Equal  *string `yaml:"equal"`
+		Text   *string `yaml:"text"`
+		Api    *string `yaml:"api"`
+		File   *string `yaml:"file"`
 	} `yaml:"expect"`
 }
 
 // Run templateの実行
 func (t CurlTemplate) Run() error {
-	resp, e := request(t.Method, t.URL, t.Cookie, t.Header, t.Body)
-	if e != nil {
-		return e
-	}
-	
-	if t.Expect.Status != nil {
-		if resp.StatusCode != *t.Expect.Status {
-			return errors.New("status codeが一致しませんでした")
-		}
+	status, body, err := t.request()
+	if err != nil {
+		return err
 	}
 
-	if t.Expect.Body != nil {
-		body, _ := io.ReadAll(resp.Body)
-		if *t.Expect.Body != string(body) {
-			return errors.New("bodyが一致しませんでした")
-		}
-	}
-
-	if t.Expect.Equal != nil {
-		equalResp, e := request(t.Method, *t.Expect.Equal, t.Cookie, t.Header, t.Body)
-		if e != nil {
-			return errors.New("比較側のレスポンス取得に失敗しました: " + e.Error())
-		}
-		if equalResp.StatusCode != resp.StatusCode {
-			return errors.New("status codeが一致しませんでした")
-		}
-		// bodyの比較をする
-		equalBody, _ := io.ReadAll(equalResp.Body)
-		originalBody, _ := io.ReadAll(resp.Body)
-		if string(equalBody) != string(originalBody) {
-			return errors.New("bodyが一致しませんでした")
-		}
-	}
-
-	return nil
+	return t.compareResponse(status, body)
 }
 
 // request HTTP Requestを投げる
-func request(method, url, cookie string, header []string, bodyStr *string) (*http.Response, error) {
-	var body io.Reader
-	if bodyStr != nil {
-		body = bytes.NewBuffer([]byte(*bodyStr))
+func (t CurlTemplate) request() (int, []byte, error) {
+	var requestBody io.Reader
+	if t.Body != nil {
+		requestBody = bytes.NewBuffer([]byte(*t.Body))
 	}
 
-	req, e := http.NewRequest(method, url, body)
-	if e != nil {
-		return nil, e
+	req, err := http.NewRequest(t.Method, t.URL, requestBody)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	for _, h := range header {
+	for _, h := range t.Header {
 		parts := strings.Split(h, ":")
 		if len(parts) == 2 {
 			req.Header.Set(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
 		}
 	}
 
-	req.Header.Set("Cookie", cookie)
+	req.Header.Set("Cookie", t.Cookie)
 
 	client := http.Client{}
-	resp, e := client.Do(req)
-	if e != nil {
-		return nil, e
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	if resp != nil {
-		defer resp.Body.Close()
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	return resp, e
+	return resp.StatusCode, respBody, nil
+}
+
+// compareResponse レスポンスを比較する
+func (t CurlTemplate) compareResponse(status int, body []byte) error {
+	if err := t.compareStatus(status); err != nil {
+		return err
+	}
+
+	if err := t.compareText(body); err != nil {
+		return err
+	}
+
+	if err := t.compareApi(body, status); err != nil {
+		return err
+	}
+
+	if err := t.compareFile(body); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// compareStatus ステータスを比較
+func (t CurlTemplate) compareStatus(status int) error {
+	if t.Expect.Status != nil && status != *t.Expect.Status {
+		return errors.New("status codeが一致しませんでした")
+	}
+	return nil
+}
+
+// compareText テキストを比較
+func (t CurlTemplate) compareText(body []byte) error {
+	if t.Expect.Text != nil && *t.Expect.Text != string(body) {
+		return errors.New("bodyが一致しませんでした")
+	}
+	return nil
+}
+
+// compareApi APIを叩いて比較
+func (t CurlTemplate) compareApi(body []byte, status int) error {
+	if t.Expect.Api != nil {
+		expectStatus, expectBody, err := t.request()
+		if err != nil {
+			return errors.New("比較側のレスポンス取得に失敗しました: " + err.Error())
+		}
+		if expectStatus != status {
+			return errors.New("status codeが一致しませんでした")
+		}
+		if !bytes.Contains(body, expectBody) {
+			return errors.New("bodyが一致しませんでした")
+		}
+	}
+	return nil
+}
+
+// compareFile ファイルを比較
+func (t CurlTemplate) compareFile(body []byte) error {
+	if t.Expect.File != nil {
+		buf, err := os.ReadFile(*t.Expect.File)
+		if err != nil {
+			return errors.New("fileが存在しません: " + err.Error())
+		}
+		if !bytes.Equal(body, buf) {
+			return errors.New("bodyが一致しませんでした")
+		}
+	}
+	return nil
 }
