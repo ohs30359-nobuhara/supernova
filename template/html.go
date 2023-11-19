@@ -14,10 +14,12 @@ type HtmlTemplate struct {
 		WaitSec int    `yaml:"waitSec"`
 		Slack   string `yaml:"string"`
 	} `yaml:"screenshot"`
-	CoreWebVital *struct {
-		WaitSec int    `yaml:"waitSec"`
-		Slack   string `yaml:"string"`
-	} `yaml:"coreWebVital"`
+	/*
+		CoreWebVital *struct {
+			WaitSec int    `yaml:"waitSec"`
+			Slack   string `yaml:"string"`
+		} `yaml:"coreWebVital"`
+	*/
 }
 
 // Run Templateの実行
@@ -31,11 +33,13 @@ func (t HtmlTemplate) Run() error {
 		}
 	}
 
+	/* APIを使えないので一旦無効化
 	if t.CoreWebVital != nil {
 		if e := coreWebVital(browser, t.CoreWebVital.WaitSec); e != nil {
 			return e
 		}
 	}
+	*/
 
 	return nil
 }
