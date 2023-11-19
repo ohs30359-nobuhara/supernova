@@ -117,7 +117,8 @@ func (t CurlTemplate) compareApi(body []byte, status int) error {
 		if expectStatus != status {
 			return errors.New("status codeが一致しませんでした")
 		}
-		if !bytes.Contains(body, expectBody) {
+
+		if !bytes.Equal(body, expectBody) {
 			return errors.New("bodyが一致しませんでした")
 		}
 	}
