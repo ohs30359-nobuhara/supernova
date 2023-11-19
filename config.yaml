@@ -1,12 +1,11 @@
 steps:
-  - name: "curl"
-    template: "curl"
+  - name: shell
+    template: shell
     option:
-      url: "https://www.yahoo.co.jp/"
-      method: "GET"
-      expect:
-        status: 200
-        text: '{"sample": "aaa"}'
+      output: true
+      script: |
+        ls -la 
+        pwd
   - name: "curl"
     template: "curl"
     option:
@@ -15,11 +14,9 @@ steps:
       expect:
         equal: "https://www.yahoo.co.jp/"
         status: 200
-#  - name: "html"
-#    template: "html"
-#    option:
-#      url: "https://www.yahoo.co.jp/"
-      #screenshot:
-      #  waitSec: 1
-#      coreWebVital:
-#        waitSec: 1
+  - name: "html"
+    template: "html"
+    option:
+      url: "https://www.yahoo.co.jp/"
+      screenshot:
+        waitSec: 1

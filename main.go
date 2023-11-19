@@ -37,6 +37,10 @@ func main() {
 		case "html":
 			var t template.HtmlTemplate
 			templateError = ExecJob(step, &t)
+		case "shell":
+			var t template.ShellTemplate
+			templateError = ExecJob(step, &t)
+
 		}
 
 		if templateError != nil {
@@ -46,4 +50,5 @@ func main() {
 			logger.Info("成功", zap.String("name", step.Name))
 		}
 	}
+	os.Exit(0)
 }
