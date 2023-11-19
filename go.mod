@@ -14,6 +14,8 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/murooka/go-diff-image v0.0.0-20171228143924-8c413ad9b24c // indirect
+	github.com/sergi/go-diff v1.3.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect

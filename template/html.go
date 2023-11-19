@@ -2,14 +2,20 @@ package template
 
 import (
 	"fmt"
+	diffimage "github.com/murooka/go-diff-image"
 	"supernova/pkg/browser"
-	"supernova/pkg/image"
+	"supernova/pkg/img"
 )
 
 type HtmlTemplate struct {
-	URL        string   `yaml:"url"`
-	Header     []string `yaml:"header"`
-	Cookie     string   `yaml:"string"`
+	URL    string   `yaml:"url"`
+	Header []string `yaml:"header"`
+	Cookie string   `yaml:"string"`
+	Diff   *struct {
+		Url     string `yaml:"url"`
+		WaitSec int    `yaml:"waitSec"`
+		Slack   string `yaml:"string"`
+	} `yaml:"diff"`
 	Screenshot *struct {
 		WaitSec int    `yaml:"waitSec"`
 		Slack   string `yaml:"string"`
@@ -24,18 +30,24 @@ type HtmlTemplate struct {
 
 // Run Templateの実行
 func (t HtmlTemplate) Run() error {
-	browser := browser.NewHeadlessBrowser(t.URL, t.Header, t.Cookie)
+	page := browser.NewPage(t.URL, t.Header, t.Cookie)
 
 	// スクリーンショット処理
 	if t.Screenshot != nil {
-		if e := screenshot(browser, t.Screenshot.WaitSec); e != nil {
+		if e := t.screenshots(page); e != nil {
+			return e
+		}
+	}
+
+	if t.Diff != nil {
+		if e := t.diff(page); e != nil {
 			return e
 		}
 	}
 
 	/* APIを使えないので一旦無効化
 	if t.CoreWebVital != nil {
-		if e := coreWebVital(browser, t.CoreWebVital.WaitSec); e != nil {
+		if e := coreWebVital(page, t.CoreWebVital.WaitSec); e != nil {
 			return e
 		}
 	}
@@ -44,28 +56,36 @@ func (t HtmlTemplate) Run() error {
 	return nil
 }
 
-// screenshot
-func screenshot(browser browser.HeadlessBrowser, sec int) error {
-	buf, e := browser.Screenshot(sec)
+// screenshots スクリーンショットを撮る
+func (t HtmlTemplate) screenshots(page browser.Page) error {
+	screenshotImg, e := page.Screenshot(t.Screenshot.WaitSec)
+	if e != nil {
+		return e
+	}
+	if e := img.SaveImageToFile(*screenshotImg, "./screenshots.png"); e != nil {
+		return e
+	}
+	return nil
+}
+
+// diff ページとの差分を取得する
+func (t HtmlTemplate) diff(page browser.Page) error {
+	actual, e := page.Screenshot(t.Diff.WaitSec)
 	if e != nil {
 		return e
 	}
 
-	img, err := image.ByteArrayToImage(*buf)
-	if err != nil {
-		return err
+	diffPage := browser.NewPage(t.Diff.Url, t.Header, t.Cookie)
+	expect, e := diffPage.Screenshot(t.Diff.WaitSec)
+	if e != nil {
+		return e
 	}
 
-	// 画像をファイルに保存する例
-	err = image.SaveImageToFile(img, "./screenshot.png")
-	if err != nil {
-		return err
-	}
-
-	return nil
+	diff := diffimage.DiffImage(*actual, *expect)
+	return img.SaveImageToFile(diff, "diff.png")
 }
 
-func coreWebVital(browser browser.HeadlessBrowser, sec int) error {
+func coreWebVital(browser browser.Page, sec int) error {
 	vital, e := browser.GetCoreWebVital(sec)
 	if e != nil {
 		return e

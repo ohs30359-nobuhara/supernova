@@ -7,16 +7,18 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/performance"
 	"github.com/chromedp/chromedp"
+	"image"
 	"strings"
+	"supernova/pkg/img"
 	"time"
 )
 
-type HeadlessBrowser struct {
+type Page struct {
 	url     string
 	headers map[string]interface{}
 }
 
-func NewHeadlessBrowser(url string, headers []string, cookie string) HeadlessBrowser {
+func NewPage(url string, headers []string, cookie string) Page {
 	h := make(map[string]interface{})
 	for _, header := range headers {
 		parts := strings.Split(header, ":")
@@ -26,14 +28,14 @@ func NewHeadlessBrowser(url string, headers []string, cookie string) HeadlessBro
 	}
 	h["Cookie"] = cookie
 
-	return HeadlessBrowser{
+	return Page{
 		url:     url,
 		headers: h,
 	}
 }
 
 // Screenshot 指定したURLのスクリーンショットを取得する
-func (b HeadlessBrowser) Screenshot(waitSec int) (*[]byte, error) {
+func (b Page) Screenshot(waitSec int) (*image.Image, error) {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -47,7 +49,12 @@ func (b HeadlessBrowser) Screenshot(waitSec int) (*[]byte, error) {
 		return nil, e
 	}
 
-	return &buf, nil
+	img, err := img.ByteArrayToImage(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &img, nil
 }
 
 type CoreWebVital struct {
@@ -62,7 +69,7 @@ type CoreWebVital struct {
 
 // GetCoreWebVital CoreWebVitalを計測する
 // HACK: この機能ではCoreWebVitalは取得できないので変更が必要
-func (b HeadlessBrowser) GetCoreWebVital(waitSec int) (CoreWebVital, error) {
+func (b Page) GetCoreWebVital(waitSec int) (CoreWebVital, error) {
 	type Entry struct {
 		Name          string  `json:"name"`
 		EntryType     string  `json:"entryType"`

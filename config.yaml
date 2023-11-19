@@ -1,22 +1,25 @@
 steps:
-  - name: shell
+  - name: shellの検証
     template: shell
     option:
       output: true
       script: |
         ls -la 
         pwd
-  - name: "curl"
-    template: "curl"
+  - name: curlの検証
+    template: curl
     option:
       url: "https://www.yahoo.co.jp/"
-      method: "GET"
+      method: GET
       expect:
         equal: "https://www.yahoo.co.jp/"
         status: 200
-  - name: "html"
+  - name: htmlの検証
     template: "html"
     option:
       url: "https://www.yahoo.co.jp/"
+      diff:
+        url: "https://www.yahoo.co.jp/"
+        waitSec: 1
       screenshot:
         waitSec: 1
