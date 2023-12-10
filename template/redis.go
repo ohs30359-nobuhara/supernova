@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"supernova/pkg"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -26,6 +27,7 @@ type RedisCommand struct {
 
 // Run templateの実行
 func (t RedisTemplate) Run() error {
+	logger := pkg.GetLogger()
 	client, err := t.createRedisInstance()
 	if err != nil {
 		return err
@@ -44,9 +46,9 @@ func (t RedisTemplate) Run() error {
 			if err != nil {
 				return fmt.Errorf("GET command has failed. %w", err)
 			}
-			fmt.Println(result)
-		case "SET":
+			logger.Info(result)
 
+		case "SET":
 			var expire time.Duration
 			if cmd.expireMin != nil {
 				expire = time.Duration(*cmd.expireMin) * time.Minute
@@ -57,7 +59,7 @@ func (t RedisTemplate) Run() error {
 			if err != nil {
 				return fmt.Errorf("SET command has failed. %w", err)
 			}
-			fmt.Println(result)
+			logger.Info(result)
 		case "DELETE":
 			result, err := client.Del(context.Background(), cmd.Key).Result()
 			if err != nil {
