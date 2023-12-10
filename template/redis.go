@@ -27,13 +27,13 @@ type RedisCommand struct {
 func (t RedisTemplate) Run() error {
 	client, err := t.createRedisInstance()
 	if err != nil {
-		return fmt.Errorf("redisインスタンスの生成エラー: %w", err)
+		return err
 	}
 	defer client.Close()
 
 	// 先に接続確認
 	if err := client.Ping(context.Background()).Err(); err != nil {
-		return fmt.Errorf("redisへの接続確認エラー: %w", err)
+		return fmt.Errorf("failed to connect to Redis. %w", err)
 	}
 
 	for _, cmd := range t.Commands {
@@ -41,20 +41,20 @@ func (t RedisTemplate) Run() error {
 		case "GET":
 			result, err := client.Get(context.Background(), cmd.Key).Result()
 			if err != nil {
-				return fmt.Errorf("GETコマンドエラー: %w", err)
+				return fmt.Errorf("GET command has failed. %w", err)
 			}
 			fmt.Println(result)
 		case "SET":
 			expire := time.Duration(*cmd.expireMin) * time.Minute
 			result, err := client.Set(context.Background(), cmd.Key, *cmd.Set, expire).Result()
 			if err != nil {
-				return fmt.Errorf("SETコマンドエラー: %w", err)
+				return fmt.Errorf("SET command has failed. %w", err)
 			}
 			fmt.Println(result)
 		case "DELETE":
 			result, err := client.Del(context.Background(), cmd.Key).Result()
 			if err != nil {
-				return fmt.Errorf("DELETEコマンドエラー: %w", err)
+				return fmt.Errorf("DELETE command has failed. %w", err)
 			}
 			fmt.Println(result)
 		}
@@ -82,5 +82,5 @@ func (t RedisTemplate) createRedisInstance() (redis.UniversalClient, error) {
 		client := redis.NewClient(options)
 		return client, nil
 	}
-	return nil, errors.New("redisの接続情報が不足しています")
+	return nil, errors.New("there is an error in the Redis connection information")
 }

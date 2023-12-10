@@ -24,7 +24,7 @@ func main() {
 	logger := pkg.GetLogger()
 	cnf, e := pkg.NewConfig("./config.yaml")
 	if e != nil {
-		logger.Error("pipelineの書式が間違っています", zap.Error(e))
+		logger.Error("The pipeline format is incorrect. Please refer to the README.", zap.Error(e))
 		panic(e)
 	}
 
@@ -44,10 +44,10 @@ func main() {
 		}
 
 		if templateError != nil {
-			logger.Error("step失敗", zap.String("name", step.Name), zap.Error(templateError))
+			logger.Error("The step execution failed.", zap.String("name", step.Name), zap.Error(templateError))
 			os.Exit(1)
 		} else {
-			logger.Info("成功", zap.String("name", step.Name))
+			logger.Info("The step execution Success", zap.String("name", step.Name))
 		}
 	}
 	os.Exit(0)

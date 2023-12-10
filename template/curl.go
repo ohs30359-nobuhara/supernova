@@ -112,14 +112,14 @@ func (t CurlTemplate) compareApi(body []byte, status int) error {
 	if t.Expect.Api != nil {
 		expectStatus, expectBody, err := t.request()
 		if err != nil {
-			return errors.New("比較側のレスポンス取得に失敗しました: " + err.Error())
+			return errors.New("The request to the comparison API has failed. " + err.Error())
 		}
 		if expectStatus != status {
-			return errors.New("status codeが一致しませんでした")
+			return errors.New("response status code did not match")
 		}
 
 		if !bytes.Equal(body, expectBody) {
-			return errors.New("bodyが一致しませんでした")
+			return errors.New("response body did not match")
 		}
 	}
 	return nil
@@ -130,10 +130,10 @@ func (t CurlTemplate) compareFile(body []byte) error {
 	if t.Expect.File != nil {
 		buf, err := os.ReadFile(*t.Expect.File)
 		if err != nil {
-			return errors.New("fileが存在しません: " + err.Error())
+			return errors.New("file not found: " + err.Error())
 		}
 		if !bytes.Equal(body, buf) {
-			return errors.New("bodyが一致しませんでした")
+			return errors.New("response body did not match")
 		}
 	}
 	return nil
