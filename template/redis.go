@@ -10,17 +10,17 @@ import (
 )
 
 type RedisTemplate struct {
-	Cluster  *[]string
-	Single   *string
-	Password string
-	Commands []RedisCommand
+	Cluster  *[]string      `yaml:"cluster""`
+	Single   *string        `yaml:"single"`
+	Password string         `yaml:"password"`
+	Commands []RedisCommand `yaml:"commands"`
 }
 
 type RedisCommand struct {
-	Action    string
-	Key       string
-	Set       *string
-	expireMin *int
+	Action    string  `yaml:"action"`
+	Key       string  `yaml:"key"`
+	Value     *string `yaml:"value"`
+	expireMin *int    `yaml:"expireMin"`
 }
 
 // Run templateの実行
@@ -45,8 +45,14 @@ func (t RedisTemplate) Run() error {
 			}
 			fmt.Println(result)
 		case "SET":
-			expire := time.Duration(*cmd.expireMin) * time.Minute
-			result, err := client.Set(context.Background(), cmd.Key, *cmd.Set, expire).Result()
+
+			var expire time.Duration
+			if cmd.expireMin != nil {
+				expire = time.Duration(*cmd.expireMin) * time.Minute
+			} else {
+				expire = 0
+			}
+			result, err := client.Set(context.Background(), cmd.Key, *cmd.Value, expire).Result()
 			if err != nil {
 				return fmt.Errorf("SET command has failed. %w", err)
 			}

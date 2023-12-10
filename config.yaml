@@ -6,20 +6,31 @@ steps:
       script: |
         ls -la 
         pwd
+  - name: Redisの検証
+    template: redis
+    option:
+      single: localhost:6379
+      password: ""
+      commands:
+        - action: SET
+          key: TEST
+          value: test value
+        - action: GET
+          key: TEST
   - name: curlの検証
     template: curl
     option:
-      url: "https://www.yahoo.co.jp/"
+      url: https://www.yahoo.co.jp/
       method: GET
       expect:
-        equal: "https://www.yahoo.co.jp/"
+        equal: https://www.yahoo.co.jp/
         status: 200
   - name: htmlの検証
-    template: "html"
+    template: html
     option:
-      url: "https://www.yahoo.co.jp/"
+      url: https://www.yahoo.co.jp/
       diff:
-        url: "https://www.yahoo.co.jp/"
+        url: https://www.yahoo.co.jp/
         waitSec: 1
       screenshot:
         waitSec: 1

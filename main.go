@@ -40,7 +40,9 @@ func main() {
 		case "shell":
 			var t template.ShellTemplate
 			templateError = ExecJob(step, &t)
-
+		case "redis":
+			var t template.RedisTemplate
+			templateError = ExecJob(step, &t)
 		}
 
 		if templateError != nil {

@@ -10,7 +10,7 @@ echo "Hello, Shell!"`
 
 	shellTemplate := ShellTemplate{
 		Script: script,
-		Dir:    nil, // Optional: Set directory if needed
+		Dir:    nil, // Optional: Value directory if needed
 	}
 
 	out, err := shellTemplate.execScript()
