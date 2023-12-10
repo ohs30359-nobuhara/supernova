@@ -2,9 +2,10 @@ package template
 
 import (
 	"fmt"
-	diffimage "github.com/murooka/go-diff-image"
 	"supernova/pkg/browser"
 	"supernova/pkg/img"
+
+	diffimage "github.com/murooka/go-diff-image"
 )
 
 type HtmlTemplate struct {

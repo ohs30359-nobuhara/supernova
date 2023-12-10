@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/cdproto/performance"
-	"github.com/chromedp/chromedp"
 	"image"
 	"strings"
 	"supernova/pkg/img"
 	"time"
+
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/performance"
+	"github.com/chromedp/chromedp"
 )
 
 type Page struct {

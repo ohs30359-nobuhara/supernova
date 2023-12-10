@@ -1,9 +1,10 @@
 package template
 
 import (
+	"testing"
+
 	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestRun(t *testing.T) {

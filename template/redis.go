@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type RedisTemplate struct {
-	Cluster  *[]string      `yaml:"cluster""`
+	Cluster  *[]string      `yaml:"cluster"`
 	Single   *string        `yaml:"single"`
 	Password string         `yaml:"password"`
 	Commands []RedisCommand `yaml:"commands"`

@@ -2,11 +2,12 @@ package main
 
 import (
 	"errors"
-	"github.com/mitchellh/mapstructure"
-	"go.uber.org/zap"
 	"os"
 	"supernova/pkg"
 	"supernova/template"
+
+	"github.com/mitchellh/mapstructure"
+	"go.uber.org/zap"
 )
 
 type TemplateRunner interface {
