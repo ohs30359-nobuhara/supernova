@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRun(t *testing.T) {
+func TestRedisTemplate_Run(t *testing.T) {
 	// モックのRedisサーバーを起動
 	s, err := miniredis.Run()
 	if err != nil {
