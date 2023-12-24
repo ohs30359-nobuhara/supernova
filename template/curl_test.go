@@ -1,6 +1,7 @@
 package template
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +11,9 @@ import (
 func TestCurlTemplate_compareApi(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Mock response"))
+		if _, e := w.Write([]byte("Mock response")); e != nil {
+			fmt.Println(e.Error())
+		}
 	}))
 	defer mockServer.Close()
 
@@ -83,7 +86,9 @@ func TestCurlTemplate_compareApi(t *testing.T) {
 func TestCurlTemplate_request(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Mock response"))
+		if _, e := w.Write([]byte("Mock response")); e != nil {
+			fmt.Println(e.Error())
+		}
 	}))
 	defer mockServer.Close()
 

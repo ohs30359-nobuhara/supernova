@@ -12,17 +12,16 @@ type ShellTemplate struct {
 	Output bool    `yaml:"output"` // ログ出力するか
 }
 
-func (t ShellTemplate) Run() error {
+func (t ShellTemplate) Run() Result {
 	out, e := t.execScript()
 	if e != nil {
-		return e
+		return NewResultError("failed exec command,", DANGER, e)
 	}
 
 	if t.Output {
 		fmt.Println(out)
 	}
-
-	return nil
+	return NewResultSuccess("")
 }
 
 func (t ShellTemplate) execScript() (string, error) {

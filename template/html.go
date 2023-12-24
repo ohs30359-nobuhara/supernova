@@ -30,19 +30,19 @@ type HtmlTemplate struct {
 }
 
 // Run Templateの実行
-func (t HtmlTemplate) Run() error {
+func (t HtmlTemplate) Run() Result {
 	page := browser.NewPage(t.URL, t.Header, t.Cookie)
 
 	// スクリーンショット処理
 	if t.Screenshot != nil {
 		if e := t.screenshots(page); e != nil {
-			return e
+			return NewResultError("failed to capture a screenshot.", DANGER, e)
 		}
 	}
 
 	if t.Diff != nil {
 		if e := t.diff(page); e != nil {
-			return e
+			return NewResultError("detected a difference.", DANGER, e)
 		}
 	}
 
@@ -54,7 +54,7 @@ func (t HtmlTemplate) Run() error {
 	}
 	*/
 
-	return nil
+	return NewResultSuccess("")
 }
 
 // screenshots スクリーンショットを撮る

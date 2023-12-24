@@ -24,13 +24,16 @@ type CurlTemplate struct {
 }
 
 // Run templateの実行
-func (t CurlTemplate) Run() error {
-	status, body, err := t.request()
-	if err != nil {
-		return err
+func (t CurlTemplate) Run() Result {
+	status, body, e := t.request()
+	if e != nil {
+		return NewResultError("request failed.", DANGER, e)
 	}
 
-	return t.compareResponse(status, body)
+	if e := t.verifyResponse(status, body); e != nil {
+		return NewResultError("validation result was incorrect.", DANGER, e)
+	}
+	return NewResultSuccess(string(body))
 }
 
 // request HTTP Requestを投げる
@@ -70,8 +73,8 @@ func (t CurlTemplate) request() (int, []byte, error) {
 	return resp.StatusCode, respBody, nil
 }
 
-// compareResponse レスポンスを比較する
-func (t CurlTemplate) compareResponse(status int, body []byte) error {
+// verifyResponse レスポンスを検証する
+func (t CurlTemplate) verifyResponse(status int, body []byte) error {
 	if err := t.compareStatus(status); err != nil {
 		return err
 	}

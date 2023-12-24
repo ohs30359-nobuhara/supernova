@@ -29,8 +29,8 @@ func TestRedisTemplate_Run(t *testing.T) {
 	}
 
 	// テストを実行
-	err = template.Run()
-	assert.NoError(t, err)
+	result := template.Run()
+	assert.NoError(t, result.Err)
 
 	// テスト用のRedisTemplateインスタンスを作成（エラーケース）
 	templateWithInvalidConnection := RedisTemplate{
@@ -41,8 +41,8 @@ func TestRedisTemplate_Run(t *testing.T) {
 	}
 
 	// エラーケースのテストを実行
-	err = templateWithInvalidConnection.Run()
-	assert.Error(t, err)
+	result = templateWithInvalidConnection.Run()
+	assert.Error(t, result.Err)
 	assert.Equal(t, "there is an error in the Redis connection information", err.Error())
 }
 

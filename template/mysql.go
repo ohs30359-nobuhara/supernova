@@ -12,27 +12,26 @@ type MysqlTemplate struct {
 	Sql        []string                       `yaml:"sql"`
 }
 
-func (t MysqlTemplate) Run() error {
-	client, err := database.NewMySqlClient(t.Connection)
-	if err != nil {
-		return fmt.Errorf("failed to create MySQL client: %w", err)
+func (t MysqlTemplate) Run() Result {
+	client, e := database.NewMySqlClient(t.Connection)
+	if e != nil {
+		return NewResultError("failed to create MySQL client", DANGER, e)
 	}
 
 	for _, query := range t.Sql {
 		if isSelectQuery(query) {
 			err := t.runSelectQuery(client, query)
 			if err != nil {
-				return fmt.Errorf("failed to execute SELECT query: %w", err)
+				return NewResultError("failed to execute SELECT query", DANGER, e)
 			}
 		} else {
 			err := t.runNonSelectQuery(client, query)
 			if err != nil {
-				return fmt.Errorf("failed to execute non-SELECT query: %w", err)
+				return NewResultError("failed to execute non-SELECT query", DANGER, e)
 			}
 		}
 	}
-
-	return nil
+	return NewResultSuccess("")
 }
 
 // runSelectQuery SELECT SQL を実行する

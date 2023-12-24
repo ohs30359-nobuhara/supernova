@@ -26,17 +26,17 @@ type RedisCommand struct {
 }
 
 // Run templateの実行
-func (t RedisTemplate) Run() error {
+func (t RedisTemplate) Run() Result {
 	logger := pkg.GetLogger()
-	client, err := t.createRedisInstance()
-	if err != nil {
-		return err
+	client, e := t.createRedisInstance()
+	if e != nil {
+		return NewResultError("failed create redis instance", DANGER, e)
 	}
 	defer client.Close()
 
 	// 先に接続確認
-	if err := client.Ping(context.Background()).Err(); err != nil {
-		return fmt.Errorf("failed to connect to Redis. %w", err)
+	if e := client.Ping(context.Background()).Err(); e != nil {
+		return NewResultError("failed to connect to Redis", DANGER, e)
 	}
 
 	for _, cmd := range t.Commands {
@@ -44,7 +44,7 @@ func (t RedisTemplate) Run() error {
 		case "GET":
 			result, err := client.Get(context.Background(), cmd.Key).Result()
 			if err != nil {
-				return fmt.Errorf("GET command has failed. %w", err)
+				return NewResultError("GET command has failed.", DANGER, e)
 			}
 			logger.Info(result)
 
@@ -55,21 +55,20 @@ func (t RedisTemplate) Run() error {
 			} else {
 				expire = 0
 			}
-			result, err := client.Set(context.Background(), cmd.Key, *cmd.Value, expire).Result()
-			if err != nil {
-				return fmt.Errorf("SET command has failed. %w", err)
+			result, e := client.Set(context.Background(), cmd.Key, *cmd.Value, expire).Result()
+			if e != nil {
+				return NewResultError("SET command has failed.", DANGER, e)
 			}
 			logger.Info(result)
 		case "DELETE":
 			result, err := client.Del(context.Background(), cmd.Key).Result()
 			if err != nil {
-				return fmt.Errorf("DELETE command has failed. %w", err)
+				return NewResultError("DELETE command has failed.", DANGER, e)
 			}
 			fmt.Println(result)
 		}
 	}
-
-	return nil
+	return NewResultSuccess("")
 }
 
 // createRedisInstance RedisのInstanceを生成
