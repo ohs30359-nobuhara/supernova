@@ -1,0 +1,21 @@
+{
+  "name": "browser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node ./src/main.ts --performance true --screenshot ./test.png https://www.yahoo.co.jp/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cac": "^6.7.14",
+    "lighthouse": "^11.4.0",
+    "puppeteer": "^21.6.1",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
