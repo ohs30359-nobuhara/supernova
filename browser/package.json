@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc --build",
     "start": "ts-node ./src/main.ts --performance true --screenshot ./test.png https://www.yahoo.co.jp/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
