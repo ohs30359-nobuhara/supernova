@@ -21,6 +21,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/murooka/go-diff-image v0.0.0-20171228143924-8c413ad9b24c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

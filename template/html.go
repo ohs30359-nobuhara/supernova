@@ -1,11 +1,10 @@
 package template
 
 import (
-	"fmt"
-	"supernova/pkg/browser"
-	"supernova/pkg/img"
+	"os/exec"
+	"supernova/pkg"
 
-	diffimage "github.com/murooka/go-diff-image"
+	"github.com/mattn/go-shellwords"
 )
 
 type HtmlTemplate struct {
@@ -21,76 +20,38 @@ type HtmlTemplate struct {
 		WaitSec int    `yaml:"waitSec"`
 		Slack   string `yaml:"string"`
 	} `yaml:"screenshot"`
-	/*
-		CoreWebVital *struct {
-			WaitSec int    `yaml:"waitSec"`
-			Slack   string `yaml:"string"`
-		} `yaml:"coreWebVital"`
-	*/
+	CoreWebVital *struct {
+		WaitSec int    `yaml:"waitSec"`
+		Slack   string `yaml:"string"`
+	} `yaml:"coreWebVital"`
 }
 
 // Run Templateの実行
 func (t HtmlTemplate) Run() Result {
-	page := browser.NewPage(t.URL, t.Header, t.Cookie)
+	logger := pkg.GetLogger()
+	command := "node ./browser/dist/main.js "
 
 	// スクリーンショット処理
 	if t.Screenshot != nil {
-		if e := t.screenshots(page); e != nil {
-			return NewResultError("failed to capture a screenshot.", DANGER, e)
-		}
+		command += "--screenshot screenshot.png "
 	}
 
-	if t.Diff != nil {
-		if e := t.diff(page); e != nil {
-			return NewResultError("detected a difference.", DANGER, e)
-		}
-	}
-
-	/* APIを使えないので一旦無効化
+	// APIを使えないので一旦無効化
 	if t.CoreWebVital != nil {
-		if e := coreWebVital(page, t.CoreWebVital.WaitSec); e != nil {
-			return e
-		}
+		command += "--performance true "
 	}
-	*/
 
-	return NewResultSuccess("")
-}
+	command += t.URL
 
-// screenshots スクリーンショットを撮る
-func (t HtmlTemplate) screenshots(page browser.Page) error {
-	screenshotImg, e := page.Screenshot(t.Screenshot.WaitSec)
+	logger.Info(command)
+	args, e := shellwords.Parse(command)
 	if e != nil {
-		return e
+		return NewResultError("", DANGER, e)
 	}
-	if e := img.SaveImageToFile(*screenshotImg, "./screenshots.png"); e != nil {
-		return e
-	}
-	return nil
-}
-
-// diff ページとの差分を取得する
-func (t HtmlTemplate) diff(page browser.Page) error {
-	actual, e := page.Screenshot(t.Diff.WaitSec)
+	output, e := exec.Command(args[0], args[1:]...).CombinedOutput()
 	if e != nil {
-		return e
+		return NewResultError("", DANGER, e)
 	}
 
-	diffPage := browser.NewPage(t.Diff.Url, t.Header, t.Cookie)
-	expect, e := diffPage.Screenshot(t.Diff.WaitSec)
-	if e != nil {
-		return e
-	}
-
-	diff := diffimage.DiffImage(*actual, *expect)
-	return img.SaveImageToFile(diff, "diff.png")
-}
-
-func coreWebVital(browser browser.Page, sec int) error {
-	vital, e := browser.GetCoreWebVital(sec)
-	if e != nil {
-		return e
-	}
-	fmt.Println(vital)
-	return nil
+	return NewResultSuccess(string(output))
 }
