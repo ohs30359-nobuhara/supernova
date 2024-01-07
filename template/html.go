@@ -1,8 +1,8 @@
 package template
 
 import (
+	"os"
 	"os/exec"
-	"supernova/pkg"
 
 	"github.com/mattn/go-shellwords"
 )
@@ -22,7 +22,7 @@ type HtmlTemplate struct {
 		} `yaml:"diff"`
 	} `yaml:"expect"`
 	// スクリーンショットの取得
-	Screenshot *bool `yaml:"screenshot"`
+	Screenshot bool `yaml:"screenshot"`
 	// CoreWebVitalの取得
 	CoreWebVital *struct {
 		// 出力形式 html or json
@@ -31,12 +31,44 @@ type HtmlTemplate struct {
 }
 
 // Run Templateの実行
-func (t HtmlTemplate) Run() Result {
-	logger := pkg.GetLogger()
+func (t HtmlTemplate) Run() Output {
+	var output Output
+
+	_, e := t.callBrowserCli()
+	if e != nil {
+		return output.SetBody(OutputBody{
+			Body:        []byte("an unexpected error has occurred. Please check the log."),
+			Status:      OutputStatusDanger,
+			ContentType: OutputTypeJson,
+		})
+	}
+
+	if t.Screenshot {
+		if buf, e := os.ReadFile("./screenshot.png"); e != nil {
+			output.SetBody(OutputBody{
+				Body:        []byte("failed to take snapshot"),
+				Status:      OutputStatusDanger,
+				ContentType: OutputTypeFile,
+			})
+		} else {
+			output.SetBody(OutputBody{
+				Body:        buf,
+				Status:      OutputStatusOK,
+				ContentType: OutputTypeFile,
+			})
+		}
+	}
+
+	// TODO: core web vitalはfileでdistする
+
+	return output
+}
+
+func (t HtmlTemplate) callBrowserCli() ([]byte, error) {
 	command := "node ./browser/dist/main.js "
 
 	// スクリーンショット処理
-	if t.Screenshot != nil {
+	if t.Screenshot {
 		command += "--screenshot screenshot.png "
 	}
 
@@ -47,15 +79,10 @@ func (t HtmlTemplate) Run() Result {
 
 	command += t.URL
 
-	logger.Info(command)
 	args, e := shellwords.Parse(command)
 	if e != nil {
-		return NewResultError("", DANGER, e)
-	}
-	output, e := exec.Command(args[0], args[1:]...).CombinedOutput()
-	if e != nil {
-		return NewResultError("", DANGER, e)
+		return nil, e
 	}
 
-	return NewResultSuccess(string(output))
+	return exec.Command(args[0], args[1:]...).CombinedOutput()
 }
