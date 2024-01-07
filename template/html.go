@@ -22,7 +22,7 @@ type HtmlTemplate struct {
 		} `yaml:"diff"`
 	} `yaml:"expect"`
 	// スクリーンショットの取得
-	Screenshot *bool `yaml:"screenshot"`
+	Screenshot bool `yaml:"screenshot"`
 	// CoreWebVitalの取得
 	CoreWebVital *struct {
 		// 出力形式 html or json
@@ -36,7 +36,7 @@ func (t HtmlTemplate) Run() Result {
 	command := "node ./browser/dist/main.js "
 
 	// スクリーンショット処理
-	if t.Screenshot != nil {
+	if t.Screenshot {
 		command += "--screenshot screenshot.png "
 	}
 
