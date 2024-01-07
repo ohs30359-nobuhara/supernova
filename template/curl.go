@@ -97,7 +97,7 @@ func (t CurlTemplate) verifyResponse(status int, body []byte) error {
 // compareStatus ステータスを比較
 func (t CurlTemplate) compareStatus(status int) error {
 	if t.Expect.Status != nil && status != *t.Expect.Status {
-		return errors.New("status codeが一致しませんでした")
+		return errors.New("response status code did not match")
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func (t CurlTemplate) compareStatus(status int) error {
 // compareText テキストを比較
 func (t CurlTemplate) compareText(body []byte) error {
 	if t.Expect.Text != nil && *t.Expect.Text != string(body) {
-		return errors.New("bodyが一致しませんでした")
+		return errors.New("response body did not match")
 	}
 	return nil
 }
