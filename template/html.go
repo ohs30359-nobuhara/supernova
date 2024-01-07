@@ -11,18 +11,22 @@ type HtmlTemplate struct {
 	URL    string   `yaml:"url"`
 	Header []string `yaml:"header"`
 	Cookie string   `yaml:"string"`
-	Diff   *struct {
-		Url     string `yaml:"url"`
-		WaitSec int    `yaml:"waitSec"`
-		Slack   string `yaml:"string"`
-	} `yaml:"diff"`
-	Screenshot *struct {
-		WaitSec int    `yaml:"waitSec"`
-		Slack   string `yaml:"string"`
-	} `yaml:"screenshot"`
+	// 検証
+	Expect struct {
+		// 画像による差分比較の有効化
+		Diff *struct {
+			// 比較対象のURL
+			Url string `yaml:"url"`
+			// 撮影までの待機時間
+			WaitSec int `yaml:"waitSec"`
+		} `yaml:"diff"`
+	} `yaml:"expect"`
+	// スクリーンショットの取得
+	Screenshot *bool `yaml:"screenshot"`
+	// CoreWebVitalの取得
 	CoreWebVital *struct {
-		WaitSec int    `yaml:"waitSec"`
-		Slack   string `yaml:"string"`
+		// 出力形式 html or json
+		Format string `yaml:"format"`
 	} `yaml:"coreWebVital"`
 }
 
