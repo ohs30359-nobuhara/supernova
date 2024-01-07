@@ -1,6 +1,6 @@
 import {HeadlessBrowser} from "./headlessBrowser";
-import {Performance} from "./performance";
 import cac, {CAC} from 'cac';
+import {createFileWithDirectory} from "./file";
 
 (async () => main())();
 
@@ -9,7 +9,7 @@ async function main(): Promise<void> {
   const browser: HeadlessBrowser = await HeadlessBrowser.New();
   try {
     const parsed = cli
-      .option("--performance <performance>", "Get core web vital. Please specify true or false.", {default: false})
+      .option("--performance <performance>", "Get core web vital. Please specify file name.")
       .option("--screenshot <screenshot>", "Take a screenshot. Please specify file name.")
       .parse();
 
@@ -28,9 +28,10 @@ async function main(): Promise<void> {
       await browser.screenshot(screenshot);
     }
 
-    if (performance === "true") {
-      const metrics: Performance[] = await browser.coreWebVital();
-      console.info(JSON.stringify(metrics));
+    if (performance) {
+      const {html, json} = await browser.coreWebVital();
+      createFileWithDirectory(`${performance}.html`, html);
+      createFileWithDirectory(`${performance}.json`,JSON.stringify(json));
     }
 
     process.exit(0)

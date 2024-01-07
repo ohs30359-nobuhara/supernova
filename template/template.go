@@ -3,9 +3,10 @@ package template
 import (
 	"errors"
 	"fmt"
-	"os"
+	"go.uber.org/zap"
 	"supernova/internal"
 	"supernova/pkg"
+	"supernova/pkg/file"
 	"supernova/pkg/slack"
 )
 
@@ -15,15 +16,17 @@ type Runner interface {
 
 type OutputStatus string
 type OutputType string
+type OutputMetadata string
 
 const (
-	OutputStatusOK       OutputStatus = "OK"
-	OutputStatusWarn     OutputStatus = "WARN"
-	OutputStatusDanger   OutputStatus = "DANGER"
-	OutputStatusCritical OutputStatus = "CRITICAL"
-	OutputTypeText       OutputType   = "TEXT"
-	OutputTypeJson       OutputType   = "JSON"
-	OutputTypeFile       OutputType   = "FILE"
+	OutputStatusOK         OutputStatus   = "OK"
+	OutputStatusWarn       OutputStatus   = "WARN"
+	OutputStatusDanger     OutputStatus   = "DANGER"
+	OutputStatusCritical   OutputStatus   = "CRITICAL"
+	OutputTypeText         OutputType     = "TEXT"
+	OutputTypeJson         OutputType     = "JSON"
+	OutputTypeFile         OutputType     = "FILE"
+	OutputMetadataFileName OutputMetadata = "FILE_NAME"
 )
 
 type Output struct {
@@ -34,6 +37,7 @@ type OutputBody struct {
 	Body        []byte
 	ContentType OutputType
 	Status      OutputStatus
+	Metadata    map[OutputMetadata]string
 }
 
 func (o *Output) SetBody(body OutputBody) Output {
@@ -45,22 +49,27 @@ func (o *Output) Post(client *internal.ClientSet, option *pkg.OutputOption, jobN
 	logger := pkg.GetLogger()
 
 	for _, body := range o.Bodies {
+		if body.Status == OutputStatusDanger {
+			logger.Error(fmt.Sprintf("status: %s, error: %s", body.Status, body.Body))
+			continue
+		}
+
+		if body.ContentType == OutputTypeFile {
+			logger.Info(fmt.Sprintf("status: %s, type: %s, file: %s", body.Status, body.ContentType, body.Metadata[OutputMetadataFileName]))
+		} else {
+			logger.Info(fmt.Sprintf("status: %s, type: %s, body: %s", body.Status, body.ContentType, body.Body))
+		}
+
 		if option.Slack != nil {
 			if e := o.postSlack(client, body, option, jobName); e != nil {
-				logger.Error("failed to send slack. " + e.Error())
+				logger.Error("failed to send slack.", zap.Error(e))
 			}
 		}
 
 		if option.File != nil {
 			if e := o.putFile(body, option); e != nil {
-				logger.Error("failed to put file. " + e.Error())
+				logger.Error("failed to put file.", zap.Error(e))
 			}
-		}
-
-		if body.ContentType == OutputTypeFile {
-			logger.Info(fmt.Sprintf("status: %s, type: %s", body.Status, body.ContentType))
-		} else {
-			logger.Info(fmt.Sprintf("status: %s, type: %s, body: %s", body.Status, body.ContentType, body.Body))
 		}
 	}
 	return nil
@@ -101,17 +110,14 @@ func (o *Output) postSlack(client *internal.ClientSet, body OutputBody, option *
 	return client.Slack.Post(msg)
 }
 
+// putFile fileに書き出す
 func (o *Output) putFile(body OutputBody, option *pkg.OutputOption) error {
 	if option.File == nil {
 		return nil
 	}
 
-	// TODO: ここ不具合 (mkdir で作ったdir配下にファイルが生成されていない)
-	if e := os.Mkdir(option.File.Dir, os.ModePerm); e != nil {
-		return e
-	}
-
-	if e := os.WriteFile(option.File.FileName, body.Body, 0644); e != nil {
+	filePath := fmt.Sprintf("%s/%s", option.File.Dir, body.Metadata[OutputMetadataFileName])
+	if e := file.Write(filePath, body.Body); e != nil {
 		return e
 	}
 	return nil

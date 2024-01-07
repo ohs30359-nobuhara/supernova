@@ -55,12 +55,41 @@ func (t HtmlTemplate) Run() Output {
 				Body:        buf,
 				Status:      OutputStatusOK,
 				ContentType: OutputTypeFile,
+				Metadata:    map[OutputMetadata]string{OutputMetadataFileName: "screenshot.png"},
 			})
 		}
 	}
 
-	// TODO: core web vitalはfileでdistする
+	if t.CoreWebVital != nil {
+		target := ""
+		switch t.CoreWebVital.Format {
+		case "html":
+			target = "lighthouse.html"
+		case "json":
+			target = "lighthouse.json"
+		default:
+			return output.SetBody(OutputBody{
+				Body:        []byte("core web vital option 'format' must be 'html' or 'json'."),
+				Status:      OutputStatusDanger,
+				ContentType: OutputTypeFile,
+			})
+		}
 
+		if buf, e := os.ReadFile(target); e != nil {
+			output.SetBody(OutputBody{
+				Body:        []byte("failed to take core web vital"),
+				Status:      OutputStatusDanger,
+				ContentType: OutputTypeFile,
+			})
+		} else {
+			output.SetBody(OutputBody{
+				Body:        buf,
+				Status:      OutputStatusOK,
+				ContentType: OutputTypeFile,
+				Metadata:    map[OutputMetadata]string{OutputMetadataFileName: target},
+			})
+		}
+	}
 	return output
 }
 
@@ -74,7 +103,7 @@ func (t HtmlTemplate) callBrowserCli() ([]byte, error) {
 
 	// APIを使えないので一旦無効化
 	if t.CoreWebVital != nil {
-		command += "--performance true "
+		command += "--performance lighthouse "
 	}
 
 	command += t.URL

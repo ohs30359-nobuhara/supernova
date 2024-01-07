@@ -1,7 +1,7 @@
 import puppeteer, {Browser, Page} from "puppeteer";
-import {writeFileSync} from "fs";
 import {convertJson} from "./performance";
 import {Performance} from "./performance"
+import {createFileWithDirectory} from "./file";
 
 export class HeadlessBrowser {
   private readonly browser: Browser
@@ -43,27 +43,30 @@ export class HeadlessBrowser {
    */
   public async screenshot(path: string): Promise<void> {
     const buf: Buffer = await this.activePage.screenshot();
-    writeFileSync(path, buf);
+    createFileWithDirectory(path, buf.toString());
   }
 
   /**
    * CoreWebVitalの取得
    */
-  public async coreWebVital(): Promise<Performance[]> {
+  public async coreWebVital(): Promise<{html: string, json: Performance[]}> {
     // puppeteerからでは開けないので chromeから開く
     // https://github.com/GoogleChrome/lighthouse/issues/15124
     const lighthouse = require('lighthouse/core/index.cjs');
-    const report = await lighthouse(this.activePage.url(), {
+    const result = await lighthouse(this.activePage.url(), {
       logLevel: "error",
-      output: "json",
+      output: "html",
       port: + new URL(this.browser.wsEndpoint()).port
     });
 
-    if (!report) {
+    if (!result) {
       throw new Error("failed to retrieve report");
     }
 
-    return convertJson(report);
+    return {
+      html: result.report as string,
+      json: convertJson(result)
+    }
   }
 
   /**

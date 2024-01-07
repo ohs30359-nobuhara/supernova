@@ -24,8 +24,9 @@ func (t ShellTemplate) Run() Output {
 
 	return output.SetBody(OutputBody{
 		Body:        out,
-		Status:      OutputStatusDanger,
+		Status:      OutputStatusOK,
 		ContentType: OutputTypeText,
+		Metadata:    map[OutputMetadata]string{OutputMetadataFileName: "shell.txt"},
 	})
 }
 

@@ -41,9 +41,7 @@ type OutputSlackOption struct {
 }
 
 type OutputFileOption struct {
-	// 出力ファイル名
-	FileName string `yaml:"fileName"`
-	// 出力先ディレクトリ
+	// 出力先Dir
 	Dir string `yaml:"dir"`
 }
 
