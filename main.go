@@ -31,26 +31,28 @@ func main() {
 		switch step.Template {
 		case "curl":
 			var t template.CurlTemplate
-			err = ExecJob(&step, &t, client)
+			err = execJob(&step, &t, client)
 		case "html":
 			var t template.HtmlTemplate
-			err = ExecJob(&step, &t, client)
+			err = execJob(&step, &t, client)
 		case "shell":
 			var t template.ShellTemplate
-			err = ExecJob(&step, &t, client)
+			err = execJob(&step, &t, client)
 		case "redis":
 			var t template.RedisTemplate
-			err = ExecJob(&step, &t, client)
+			err = execJob(&step, &t, client)
 		}
 
 		if err != nil {
+			logger.Error(err.Error())
 			os.Exit(1)
 		}
 	}
 	os.Exit(0)
 }
 
-func ExecJob(step *pkg.StepOption, target template.Runner, client *internal.ClientSet) error {
+// execJob templateの実行
+func execJob(step *pkg.StepOption, target template.Runner, client *internal.ClientSet) error {
 	if e := mapstructure.Decode(step.Option, target); e != nil {
 		return errors.New("template decode error:" + e.Error())
 	}
