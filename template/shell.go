@@ -1,7 +1,6 @@
 package template
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 )
@@ -9,30 +8,37 @@ import (
 type ShellTemplate struct {
 	Script string  `yaml:"script"` // 実行スクリプト
 	Dir    *string `yaml:"dir"`    // 実行ディレクトリの指定 (未指定ならカレントディレクトリ)
-	Output bool    `yaml:"output"` // ログ出力するか
 }
 
-func (t ShellTemplate) Run() Result {
+func (t ShellTemplate) Run() Output {
+	var output Output
+
 	out, e := t.execScript()
 	if e != nil {
-		return NewResultError("failed exec command,", DANGER, e)
+		return output.SetBody(OutputBody{
+			Body:        []byte("failed exec command. " + e.Error()),
+			Status:      OutputStatusDanger,
+			ContentType: OutputTypeText,
+		})
 	}
 
-	if t.Output {
-		fmt.Println(out)
-	}
-	return NewResultSuccess("")
+	return output.SetBody(OutputBody{
+		Body:        out,
+		Status:      OutputStatusDanger,
+		ContentType: OutputTypeText,
+	})
 }
 
-func (t ShellTemplate) execScript() (string, error) {
+// execScript shell commandを実行
+func (t ShellTemplate) execScript() ([]byte, error) {
 	path := "temp.sh"
 	temp, e := os.CreateTemp(".", path)
 	if e != nil {
-		return "", e
+		return nil, e
 	}
 
 	if _, e := temp.Write([]byte(t.Script)); e != nil {
-		return "", e
+		return nil, e
 	}
 
 	defer os.Remove(temp.Name())
@@ -45,7 +51,7 @@ func (t ShellTemplate) execScript() (string, error) {
 
 	output, e := cmd.CombinedOutput()
 	if e != nil {
-		return "", e
+		return nil, e
 	}
-	return string(output), nil
+	return output, nil
 }

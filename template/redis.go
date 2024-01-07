@@ -3,9 +3,7 @@ package template
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
-	"supernova/pkg"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -26,27 +24,43 @@ type RedisCommand struct {
 }
 
 // Run templateの実行
-func (t RedisTemplate) Run() Result {
-	logger := pkg.GetLogger()
+func (t RedisTemplate) Run() Output {
+	var output Output
 	client, e := t.createRedisInstance()
 	if e != nil {
-		return NewResultError("failed create redis instance", DANGER, e)
+		return output.SetBody(OutputBody{
+			Body:        []byte("failed create redis instance. " + e.Error()),
+			ContentType: OutputTypeText,
+			Status:      OutputStatusDanger,
+		})
 	}
 	defer client.Close()
 
 	// 先に接続確認
 	if e := client.Ping(context.Background()).Err(); e != nil {
-		return NewResultError("failed to connect to Redis", DANGER, e)
+		return output.SetBody(OutputBody{
+			Body:        []byte("failed to connect to Redis. " + e.Error()),
+			ContentType: OutputTypeText,
+			Status:      OutputStatusDanger,
+		})
 	}
 
 	for _, cmd := range t.Commands {
 		switch strings.ToUpper(cmd.Action) {
 		case "GET":
-			result, err := client.Get(context.Background(), cmd.Key).Result()
-			if err != nil {
-				return NewResultError("GET command has failed.", DANGER, e)
+			if result, e := client.Get(context.Background(), cmd.Key).Result(); e != nil {
+				return output.SetBody(OutputBody{
+					Body:        []byte("GET command has failed. " + e.Error()),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusDanger,
+				})
+			} else {
+				output.SetBody(OutputBody{
+					Body:        []byte(result),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusOK,
+				})
 			}
-			logger.Info(result)
 
 		case "SET":
 			var expire time.Duration
@@ -55,20 +69,36 @@ func (t RedisTemplate) Run() Result {
 			} else {
 				expire = 0
 			}
-			result, e := client.Set(context.Background(), cmd.Key, *cmd.Value, expire).Result()
-			if e != nil {
-				return NewResultError("SET command has failed.", DANGER, e)
+			if _, e := client.Set(context.Background(), cmd.Key, *cmd.Value, expire).Result(); e != nil {
+				return output.SetBody(OutputBody{
+					Body:        []byte("SET command has failed. " + e.Error()),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusDanger,
+				})
+			} else {
+				output.SetBody(OutputBody{
+					Body:        []byte("SET command was successful."),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusOK,
+				})
 			}
-			logger.Info(result)
 		case "DELETE":
-			result, err := client.Del(context.Background(), cmd.Key).Result()
-			if err != nil {
-				return NewResultError("DELETE command has failed.", DANGER, e)
+			if _, e := client.Del(context.Background(), cmd.Key).Result(); e != nil {
+				return output.SetBody(OutputBody{
+					Body:        []byte("DELETE command has failed. " + e.Error()),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusDanger,
+				})
+			} else {
+				output.SetBody(OutputBody{
+					Body:        []byte("DELETE command was successful."),
+					ContentType: OutputTypeText,
+					Status:      OutputStatusOK,
+				})
 			}
-			fmt.Println(result)
 		}
 	}
-	return NewResultSuccess("")
+	return output
 }
 
 // createRedisInstance RedisのInstanceを生成

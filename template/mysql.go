@@ -12,26 +12,45 @@ type MysqlTemplate struct {
 	Sql        []string                       `yaml:"sql"`
 }
 
-func (t MysqlTemplate) Run() Result {
+func (t MysqlTemplate) Run() Output {
+	var output Output
 	client, e := database.NewMySqlClient(t.Connection)
 	if e != nil {
-		return NewResultError("failed to create MySQL client", DANGER, e)
+		return output.SetBody(OutputBody{
+			Body:        []byte("failed to create MySQL client. " + e.Error()),
+			Status:      OutputStatusDanger,
+			ContentType: OutputTypeText,
+		})
 	}
 
 	for _, query := range t.Sql {
 		if isSelectQuery(query) {
 			err := t.runSelectQuery(client, query)
 			if err != nil {
-				return NewResultError("failed to execute SELECT query", DANGER, e)
+				return output.SetBody(OutputBody{
+					Body:        []byte("failed to execute SELECT query. " + e.Error()),
+					Status:      OutputStatusDanger,
+					ContentType: OutputTypeText,
+				})
 			}
 		} else {
 			err := t.runNonSelectQuery(client, query)
 			if err != nil {
-				return NewResultError("failed to execute non-SELECT query", DANGER, e)
+				return output.SetBody(OutputBody{
+					Body:        []byte("failed to execute non-SELECT query. " + e.Error()),
+					Status:      OutputStatusDanger,
+					ContentType: OutputTypeText,
+				})
 			}
 		}
 	}
-	return NewResultSuccess("")
+
+	// TODO: SQLの実行結果を送るようにする
+	return output.SetBody(OutputBody{
+		Body:        []byte("sql executed successfully"),
+		Status:      OutputStatusOK,
+		ContentType: OutputTypeText,
+	})
 }
 
 // runSelectQuery SELECT SQL を実行する

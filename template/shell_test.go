@@ -18,7 +18,7 @@ echo "Hello, Shell!"`
 		t.Errorf("Error executing ShellTemplate: %v", err)
 	}
 
-	if out != "Hello, Shell!\n" {
+	if string(out) != "Hello, Shell!\n" {
 		t.Errorf("output error")
 	}
 }

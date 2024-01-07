@@ -49,7 +49,7 @@ type OutputFileOption struct {
 
 type SettingsOption struct {
 	// Slack共通設定
-	Slack SettingsSlackOption `yaml:"slack"`
+	Slack *SettingsSlackOption `yaml:"slack"`
 }
 
 type SettingsSlackOption struct {
