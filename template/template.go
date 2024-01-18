@@ -22,7 +22,6 @@ const (
 	OutputStatusOK         OutputStatus   = "OK"
 	OutputStatusWarn       OutputStatus   = "WARN"
 	OutputStatusDanger     OutputStatus   = "DANGER"
-	OutputStatusCritical   OutputStatus   = "CRITICAL"
 	OutputTypeText         OutputType     = "TEXT"
 	OutputTypeJson         OutputType     = "JSON"
 	OutputTypeFile         OutputType     = "FILE"
